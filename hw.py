@@ -65,21 +65,31 @@ def create_X_t(data):
 
 ############### Functions end here
 
-x = numpy.array([1,2,3])
-y = numpy.array([2,2,2])
-# print (linear_kernel(x,y))
+# x = numpy.array([1,2,3])
+# y = numpy.array([2,2,2])
+# # print (linear_kernel(x,y))
 
-P = createP(numpy.array([x,y]), numpy.array([1,-1]), linear_kernel );
+# P = createP(numpy.array([x,y]), numpy.array([1,-1]), linear_kernel );
 # print(P)
 
-q, h, G = build_q_G_h( 3)
+
+
+
+
+############ serious 
 
 classA, classB, data = generate_data()
 X, t =create_X_t(data)
+P = createP(X, t, linear_kernel)
 
+(N,c) = numpy.shape(data)
+q, h, G = build_q_G_h(N)
+
+r = qp( matrix(P), matrix(q), matrix(G), matrix(h));
+alpha = list( r['x'] )
 print("before printing")
-print (X)
-print (t)
+print ()
+pprint (alpha)
 # plot_data(classA, classB)
 
 
