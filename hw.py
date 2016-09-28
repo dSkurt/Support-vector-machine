@@ -26,16 +26,17 @@ def build_q_G_h(n ):
 	return  q, h, G
 
 def generate_data():
-	classA = [(random.normalvariate(-1.5, 1), 
-		random.normalvariate(0.5, 1), 
-		1.0) for i in range(5)] + \
-		[(random.normalvariate(1.5, 1), 
+	classA = [(random.normalvariate(-1.5,1), 
 			random.normalvariate(0.5, 1), 
 			1.0) 
-		for i in range(5)]
+			for i in range(5)] + \
+			[(random.normalvariate(1.5, 1), 
+			random.normalvariate(0.5, 1), 
+			1.0) 
+			for i in range(5)]
 	
 	classB = [(random.normalvariate(0.0, 0.5), 
-		random. normalvariate(-0.5, 0.5) ,
+		random. normalvariate(-2.5, 0.5) ,
 		 -1.0) 
 	for i in range(10)]
 	
@@ -62,6 +63,25 @@ def create_X_t(data):
 	t = numpy.transpose(t)
 	X = list_of_lists[:, range(c-1)]
 	return X, t
+
+def save_non_zero_alpha(alpha):
+	ret = []
+	for i in range (len(alpha)):
+		if numpy.absolute(alpha[i]) > 0.00001:
+			ret.append([i, alpha[i]])
+
+	return ret
+
+def ind(est_x, xi_alpha_pair , X, T, kernel_func):
+	(r,c) = numpy.shape(xi_alpha_pair);
+	ret = 0;
+	for i in range(r):
+		dp_index = xi_alpha_pair[i][0]
+		alpha = xi_alpha_pair[i][1]
+		t_i = T[dp_index]
+		x_i = X[dp_index]
+		ret = ret + (alpha *t_i*kernel_func(est_x, x_i))
+	return ret
 
 ############### Functions end here
 
@@ -90,8 +110,15 @@ alpha = list( r['x'] )
 print("before printing")
 print ()
 pprint (alpha)
-# plot_data(classA, classB)
+xi_alpha_pair = save_non_zero_alpha(alpha);
 
+print(xi_alpha_pair)
+plot_data(classA, classB)
+
+est_x = [1, 3]
+
+retx = ind(est_x, xi_alpha_pair , X, t, linear_kernel)
+print(retx)
 
 
 
