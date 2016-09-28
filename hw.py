@@ -52,7 +52,7 @@ def plot_data(classA, classB):
 	pylab.plot([p[0] for p in classB],
 				[p[1] for p in classB],
 				'ro' )
-	pylab.show()
+	
 	return
 
 
@@ -83,6 +83,17 @@ def ind(est_x, xi_alpha_pair , X, T, kernel_func):
 		ret = ret + (alpha *t_i*kernel_func(est_x, x_i))
 	return ret
 
+
+def draw_contour(xi_alpha_pair,X,T,kernel_func):
+	xrange = numpy.arange(-4,4,0.05)
+	yrange = numpy.arange(-4,4,0.05)
+	
+	grid = matrix([[ind(numpy.array((x,y)),xi_alpha_pair,X,T,kernel_func) for y in yrange] for x in xrange])
+	
+	pylab.contour(xrange,yrange, grid, (-1.0, 0.0, 1.0), colors=('red','black','blue'),linewidths=(1,3,1))
+	
+	
+	
 ############### Functions end here
 
 # x = numpy.array([1,2,3])
@@ -120,10 +131,11 @@ est_x = [1, 3]
 retx = ind(est_x, xi_alpha_pair , X, t, linear_kernel)
 print(retx)
 
-
-
-
-
+draw_contour(xi_alpha_pair,X,t,linear_kernel)
+(z,c) = numpy.shape(xi_alpha_pair)
+for i in range(z):
+	pylab.plot(X[xi_alpha_pair[i][0]][0],X[xi_alpha_pair[i][0]][1],'go')
+pylab.show()
 
 
 
