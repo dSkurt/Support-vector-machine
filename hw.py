@@ -13,3 +13,5 @@ y = numpy.array([2,2,2])
 print (linear_kernel(x,y))
 
 
+def make_p(X,Y,T,K):
+	
