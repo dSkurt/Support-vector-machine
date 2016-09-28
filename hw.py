@@ -8,6 +8,14 @@ import numpy, pylab, random, math
 
 def linear_kernel(x,y):
 	return numpy.dot(x,y) + 1
+
+def poly_kernel(x,y ):
+	p = 2
+	return numpy.power((numpy.dot(x,y) + 1), p) 
+
+def radial_basis_kernel(x,y):
+	sigma = 0.4 
+	return numpy.exp(-(( numpy.dot( (x-y), (x-y)) / ( 2 *sigma *sigma ))))
 	
 def createP(X ,T, K):
 	size = len(X)
@@ -109,9 +117,10 @@ def draw_contour(xi_alpha_pair,X,T,kernel_func):
 
 ############ serious 
 
+kernel = radial_basis_kernel
 classA, classB, data = generate_data()
 X, t =create_X_t(data)
-P = createP(X, t, linear_kernel)
+P = createP(X, t, kernel)
 
 (N,c) = numpy.shape(data)
 q, h, G = build_q_G_h(N)
@@ -128,10 +137,10 @@ plot_data(classA, classB)
 
 est_x = [1, 3]
 
-retx = ind(est_x, xi_alpha_pair , X, t, linear_kernel)
+retx = ind(est_x, xi_alpha_pair , X, t, kernel)
 print(retx)
 
-draw_contour(xi_alpha_pair,X,t,linear_kernel)
+draw_contour(xi_alpha_pair,X,t,kernel)
 (z,c) = numpy.shape(xi_alpha_pair)
 for i in range(z):
 	pylab.plot(X[xi_alpha_pair[i][0]][0],X[xi_alpha_pair[i][0]][1],'go')
