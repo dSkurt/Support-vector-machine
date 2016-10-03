@@ -120,7 +120,9 @@ def draw_contour(xi_alpha_pair,X,T,kernel_func):
 
 def run(classA,classB,data,kernel,arg):
 	
-	
+	global POLY_ARG
+	global RADIAL_SIGMA
+		
 	if kernel == poly_kernel:
 		POLY_ARG = arg
 	elif kernel == radial_basis_kernel:
@@ -163,7 +165,7 @@ def run(classA,classB,data,kernel,arg):
 
 
 
-classA, classB, data = generate_data((1,0.0),(1.0,2),20)
+classA, classB, data = generate_data((-1,0.0),(2,3),20)
 
 
 proc0 = multiprocessing.Process(target=run,args=(classA,classB,data,poly_kernel,2))
@@ -176,6 +178,11 @@ proc1.start()
 
 proc2 = multiprocessing.Process(target=run,args=(classA,classB,data,radial_basis_kernel,0.7))
 proc2.start()
+
+
+proc2 = multiprocessing.Process(target=run,args=(classA,classB,data,radial_basis_kernel,1.5))
+proc2.start()
+
 
 run(classA,classB,data,linear_kernel,0)
 
