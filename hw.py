@@ -2,20 +2,21 @@ from cvxopt.solvers import qp
 from cvxopt.base import matrix
 from pprint import pprint
 import numpy, pylab, random, math
+import multiprocessing
 
 ############### Functions start here
 
+POLY_ARG = 2
+RADIAL_SIGMA = 0.7
 
 def linear_kernel(x,y):
 	return numpy.dot(x,y) + 1
 
 def poly_kernel(x,y ):
-	p = 2
-	return numpy.power((numpy.dot(x,y) + 1), p) 
+	return numpy.power((numpy.dot(x,y) + 1), POLY_ARG) 
 
 def radial_basis_kernel(x,y):
-	sigma = 0.4 
-	return numpy.exp(-(( numpy.dot( (x-y), (x-y)) / ( 2 *sigma *sigma ))))
+	return numpy.exp(-(( numpy.dot( (x-y), (x-y)) / ( 2 *RADIAL_SIGMA *RADIAL_SIGMA ))))
 	
 def createP(X ,T, K):
 	size = len(X)
@@ -33,20 +34,20 @@ def build_q_G_h(n ):
 	numpy.fill_diagonal(G, -1)
 	return  q, h, G
 
-def generate_data():
-	classA = [(random.normalvariate(-1.5,1), 
-			random.normalvariate(0.5, 1), 
+def generate_data(meanA,varA,n):
+	classA = [(random.normalvariate(meanA[0],varA[0]), 
+			random.normalvariate(meanA[1], varA[1]), 
 			1.0) 
-			for i in range(5)] + \
+			for i in range(n/4)] + \
 			[(random.normalvariate(1.5, 1), 
 			random.normalvariate(0.5, 1), 
 			1.0) 
-			for i in range(5)]
+			for i in range(n/4)]
 	
 	classB = [(random.normalvariate(0.0, 0.5), 
 		random. normalvariate(-2.5, 0.5) ,
 		 -1.0) 
-	for i in range(10)]
+	for i in range(n/2)]
 	
 	data = classA + classB 
 	random.shuffle (data)
@@ -117,42 +118,66 @@ def draw_contour(xi_alpha_pair,X,T,kernel_func):
 
 ############ serious 
 
-kernel = radial_basis_kernel
-classA, classB, data = generate_data()
-X, t =create_X_t(data)
-P = createP(X, t, kernel)
+def run(classA,classB,data,kernel,arg):
+	
+	
+	if kernel == poly_kernel:
+		POLY_ARG = arg
+	elif kernel == radial_basis_kernel:
+		RADIAL_SIGMA = arg
+		
+	title = kernel.__name__ + " arg:" +str(arg)
+		
+	print (title)
+	
+	
+	pylab.figure()
+	X, t =create_X_t(data)
+	P = createP(X, t, kernel)
+	(N,c) = numpy.shape(data)
+	q, h, G = build_q_G_h(N)
 
-(N,c) = numpy.shape(data)
-q, h, G = build_q_G_h(N)
+	r = qp( matrix(P), matrix(q), matrix(G), matrix(h));
+	alpha = list( r['x'] )
+	print("before printing")
+	print ()
+	pprint (alpha)
+	xi_alpha_pair = save_non_zero_alpha(alpha);
 
-r = qp( matrix(P), matrix(q), matrix(G), matrix(h));
-alpha = list( r['x'] )
-print("before printing")
-print ()
-pprint (alpha)
-xi_alpha_pair = save_non_zero_alpha(alpha);
+	print(xi_alpha_pair)
+	plot_data(classA, classB)
+	est_x = [1, 3]
 
-print(xi_alpha_pair)
-plot_data(classA, classB)
+	retx = ind(est_x, xi_alpha_pair , X, t, kernel)
+	print(retx)
 
-est_x = [1, 3]
+	if len(xi_alpha_pair) < len(alpha):
+		draw_contour(xi_alpha_pair,X,t,kernel)
+		(z,c) = numpy.shape(xi_alpha_pair)
+		for i in range(z):
+			pylab.plot(X[xi_alpha_pair[i][0]][0],X[xi_alpha_pair[i][0]][1],'go')
 
-retx = ind(est_x, xi_alpha_pair , X, t, kernel)
-print(retx)
-
-draw_contour(xi_alpha_pair,X,t,kernel)
-(z,c) = numpy.shape(xi_alpha_pair)
-for i in range(z):
-	pylab.plot(X[xi_alpha_pair[i][0]][0],X[xi_alpha_pair[i][0]][1],'go')
-pylab.show()
-
-
+	
+	pylab.title(title)
+	pylab.show()
 
 
 
+classA, classB, data = generate_data((1,0.0),(1.0,2),20)
 
 
+proc0 = multiprocessing.Process(target=run,args=(classA,classB,data,poly_kernel,2))
+proc0.start()
 
+
+proc1 = multiprocessing.Process(target=run,args=(classA,classB,data,poly_kernel,3))
+proc1.start()
+
+
+proc2 = multiprocessing.Process(target=run,args=(classA,classB,data,radial_basis_kernel,0.7))
+proc2.start()
+
+run(classA,classB,data,linear_kernel,0)
 
 
 
