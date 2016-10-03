@@ -9,6 +9,34 @@ import multiprocessing
 POLY_ARG = 2
 RADIAL_SIGMA = 0.7
 
+
+def generate_insep_data(): 
+	classA = [(random.normalvariate(-1.5,1), 
+			random.normalvariate(0.5, 1), 
+			1.0) 
+			for i in range(5)] + \
+			[(random.normalvariate(1.5, 1), 
+			random.normalvariate(0.5, 1), 
+			1.0) 
+			for i in range(5)]
+	
+	classB = [(random.normalvariate(-1.5,1), 
+			random.normalvariate(0.5, 1), 
+			1.0) 
+			for i in range(5)] + \
+			[(random.normalvariate(1.5, 1), 
+			random.normalvariate(0.5, 1), 
+			1.0) 
+			for i in range(5)]
+
+
+	data = classA + classB
+	random.shuffle (data)
+	return classA, classB, data
+
+
+
+
 def linear_kernel(x,y):
 	return numpy.dot(x,y) + 1
 
@@ -26,26 +54,38 @@ def createP(X ,T, K):
 			P[i][j] = T[i]*T[j]* K(X[i], X[j])
 	return P
 
-def build_q_G_h(n ):
+def build_q_G_h(n,c):
 	q = numpy.ones(n) * -1
 	h = numpy.zeros(n)
+	hc = numpy.zeros(n)
+	hc = hc + c
+	h = numpy.append(h,hc,0)
 	g = (n,n)
 	G = numpy.zeros(g)
+	GC = numpy.zeros(g)
 	numpy.fill_diagonal(G, -1)
+	numpy.fill_diagonal(GC, 1)
+	
+	G = numpy.append(G,GC,0)
+	
+	(u,v) =  G.shape
+	print (u)
+	print (v)
+	
 	return  q, h, G
 
-def generate_data(meanA,varA,n):
+def generate_data(meanA,varA,varB,n):
 	classA = [(random.normalvariate(meanA[0],varA[0]), 
 			random.normalvariate(meanA[1], varA[1]), 
 			1.0) 
 			for i in range(n/4)] + \
-			[(random.normalvariate(1.5, 1), 
-			random.normalvariate(0.5, 1), 
+			[(random.normalvariate(1.5, varB[0]), 
+			random.normalvariate(0.5, varB[1]), 
 			1.0) 
 			for i in range(n/4)]
 	
-	classB = [(random.normalvariate(0.0, 0.5), 
-		random. normalvariate(-2.5, 0.5) ,
+	classB = [(random.normalvariate(0.0, varB[0]), 
+		random. normalvariate(-2.5, varB[1]) ,
 		 -1.0) 
 	for i in range(n/2)]
 	
@@ -118,7 +158,7 @@ def draw_contour(xi_alpha_pair,X,T,kernel_func):
 
 ############ serious 
 
-def run(classA,classB,data,kernel,arg):
+def run(classA,classB,data,kernel,arg,C):
 	
 	global POLY_ARG
 	global RADIAL_SIGMA
@@ -137,7 +177,8 @@ def run(classA,classB,data,kernel,arg):
 	X, t =create_X_t(data)
 	P = createP(X, t, kernel)
 	(N,c) = numpy.shape(data)
-	q, h, G = build_q_G_h(N)
+	
+	q, h, G = build_q_G_h(N,C)
 
 	r = qp( matrix(P), matrix(q), matrix(G), matrix(h));
 	alpha = list( r['x'] )
@@ -165,26 +206,30 @@ def run(classA,classB,data,kernel,arg):
 
 
 
-classA, classB, data = generate_data((-1,0.0),(2,3),20)
+classA, classB, data = generate_data((0,1.0),(1,3),(1,1.2),20)
 
+#classA, classB, data = generate_insep_data()
 
-proc0 = multiprocessing.Process(target=run,args=(classA,classB,data,poly_kernel,2))
+#
+proc0 = multiprocessing.Process(target=run,args=(classA,classB,data,linear_kernel,0,1000000))
 proc0.start()
 
 
-proc1 = multiprocessing.Process(target=run,args=(classA,classB,data,poly_kernel,3))
-proc1.start()
+proc0 = multiprocessing.Process(target=run,args=(classA,classB,data,linear_kernel,0,1000))
+proc0.start()
 
 
-proc2 = multiprocessing.Process(target=run,args=(classA,classB,data,radial_basis_kernel,0.7))
-proc2.start()
+#proc1 = multiprocessing.Process(target=run,args=(classA,classB,data,poly_kernel,3))
+#proc1.start()
+
+#proc2 = multiprocessing.Process(target=run,args=(classA,classB,data,radial_basis_kernel,0.3))
+#proc2.start()
+
+#proc2 = multiprocessing.Process(target=run,args=(classA,classB,data,radial_basis_kernel,0.5))
+#proc2.start()
 
 
-proc2 = multiprocessing.Process(target=run,args=(classA,classB,data,radial_basis_kernel,1.5))
-proc2.start()
-
-
-run(classA,classB,data,linear_kernel,0)
+#run(classA,classB,data,linear_kernel,0,1000)
 
 
 
